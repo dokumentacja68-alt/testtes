@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Operacyjny - Discord</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1e1e24;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .panel {
+      background-color: #2b2d31;
+      padding: 25px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      text-align: center;
+      color: #f2f3f5;
+    }
+    label {
+      font-size: 0.85rem;
+      color: #b5bac1;
+      margin-bottom: 5px;
+      display: block;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #1e1f22;
+      background-color: #1e1f22;
+      color: #dbdee1;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #5865f2;
+    }
+    button {
+      background-color: #5865f2;
+      color: white;
+      border: none;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #4752c4;
+    }
+    #status {
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="panel">
+    <h2>Panel Operacyjny</h2>
+    
+    <label for="username">Identyfikator / Nick (opcjonalnie)</label>
+    <input type="text" id="username" placeholder="Np. Dowódca, Jan Kowalski...">
+    
+    <label for="message">Treść</label>
+    <textarea id="message" rows="5" placeholder="Wpisz treść raportu lub wiadomości..."></textarea>
+    
+    <button onclick="sendMessage()">Wyślij na kanał</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // Twój bezpośredni webhook do Discorda
+    const WEBHOOK_URL = "https://canary.discord.com/api/webhooks/1553460157428670484/ct7H3dQfgZb0HqOjqLEcA0qSmuV3DyofQGqPxr8WLB6fE8s1EcmJz3_obfzOwVrttwO2";
+
+    async function sendMessage() {
+      const usernameInput = document.getElementById('username').value;
+      const messageInput = document.getElementById('message').value;
+      const statusDiv = document.getElementById('status');
+      const button = document.querySelector('button');
+
+      if (!messageInput.trim()) {
+        statusDiv.style.color = '#f23f42'; // Czerwony kolor Discorda
+        statusDiv.innerText = "Treść wiadomości nie może być pusta.";
+        return;
+      }
+
+      statusDiv.style.color = '#f0b232'; // Żółty kolor Discorda
+      statusDiv.innerText = "Przesyłanie...";
+      button.disabled = true;
+
+      const payload = {
+        content: messageInput,
+        username: usernameInput.trim() !== "" ? usernameInput : "Panel Systemowy"
+      };
+
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok || response.status === 204) {
+          statusDiv.style.color = '#23a559'; // Zielony kolor Discorda
+          statusDiv.innerText = "Wiadomość wysłana pomyślnie!";
+          document.getElementById('message').value = ''; // Czyści pole tekstowe po wysłaniu
+        } else {
+          statusDiv.style.color = '#f23f42';
+          statusDiv.innerText = "Wystąpił błąd: " + response.status;
+        }
+      } catch (error) {
+        statusDiv.style.color = '#f23f42';
+        statusDiv.innerText = "Błąd połączenia z siecią.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
