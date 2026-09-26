@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Operacyjny - Discord</title>
+  <title>Panel Operacyjny - Discord Embed & File</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,38 +12,61 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+      padding: 20px 0;
+      box-sizing: border-box;
     }
     .panel {
       background-color: #2b2d31;
       padding: 25px;
       border-radius: 10px;
-      width: 350px;
+      width: 400px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.4);
     }
     h2 {
       margin-top: 0;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       text-align: center;
       color: #f2f3f5;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #949ba4;
+      margin-top: 15px;
+      margin-bottom: 8px;
+      font-weight: bold;
     }
     label {
       font-size: 0.85rem;
       color: #b5bac1;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       display: block;
     }
-    input, textarea, button {
+    input[type="text"], input[type="url"], textarea, input[type="file"] {
       width: 100%;
-      margin-bottom: 15px;
-      padding: 12px;
+      margin-bottom: 12px;
+      padding: 10px;
       border-radius: 6px;
       border: 1px solid #1e1f22;
       background-color: #1e1f22;
       color: #dbdee1;
       box-sizing: border-box;
       font-family: inherit;
+      font-size: 0.9rem;
+    }
+    input[type="color"] {
+      width: 100%;
+      height: 40px;
+      border: 1px solid #1e1f22;
+      background-color: #1e1f22;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      padding: 2px;
     }
     input:focus, textarea:focus {
       outline: none;
@@ -53,9 +76,13 @@
       background-color: #5865f2;
       color: white;
       border: none;
+      padding: 12px;
       font-weight: 600;
       font-size: 1rem;
+      border-radius: 6px;
       cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
       transition: background-color 0.2s;
     }
     button:hover {
@@ -66,65 +93,112 @@
       font-size: 0.9rem;
       font-weight: 500;
       min-height: 20px;
+      margin-top: 12px;
     }
   </style>
 </head>
 <body>
 
   <div class="panel">
-    <h2>Panel Operacyjny</h2>
+    <h2>Panel Wiadomości Embed</h2>
     
-    <label for="username">Identyfikator / Nick (opcjonalnie)</label>
-    <input type="text" id="username" placeholder="Np. Dowódca, Jan Kowalski...">
+    <!-- Ustawienia Nadawcy -->
+    <div class="section-title">Ustawienia Webhooka</div>
     
-    <label for="message">Treść</label>
-    <textarea id="message" rows="5" placeholder="Wpisz treść raportu lub wiadomości..."></textarea>
+    <label for="username">Nazwa wysyłającego (Webhook Name)</label>
+    <input type="text" id="username" placeholder="Np. System Centrum Dowodzenia">
     
-    <button onclick="sendMessage()">Wyślij na kanał</button>
+    <label for="avatarUrl">URL do zdjęcia profilowego (Avatar)</label>
+    <input type="url" id="avatarUrl" placeholder="https://i.imgur.com/przyklad.png">
+
+    <!-- Ustawienia Wiadomości Embed -->
+    <div class="section-title">Treść Embed</div>
+    
+    <label for="embedTitle">Tytuł Embeda</label>
+    <input type="text" id="embedTitle" placeholder="Wpisz tytuł okienka...">
+    
+    <label for="embedDescription">Opis / Treść wiadomości</label>
+    <textarea id="embedDescription" rows="4" placeholder="Wpisz główną treść ogłoszenia / raportu..."></textarea>
+    
+    <label for="embedColor">Pasek koloru Embeda</label>
+    <input type="color" id="embedColor" value="#5865f2">
+
+    <!-- Załącznik -->
+    <div class="section-title">Załącznik</div>
+    <label for="fileInput">Wybierz plik (zdjęcie, dokument itp.)</label>
+    <input type="file" id="fileInput">
+    
+    <button onclick="sendEmbed()">Wyślij wiadomość</button>
     <div id="status"></div>
   </div>
 
   <script>
-    // Twój bezpośredni webhook do Discorda
     const WEBHOOK_URL = "https://canary.discord.com/api/webhooks/1553460157428670484/ct7H3dQfgZb0HqOjqLEcA0qSmuV3DyofQGqPxr8WLB6fE8s1EcmJz3_obfzOwVrttwO2";
 
-    async function sendMessage() {
-      const usernameInput = document.getElementById('username').value;
-      const messageInput = document.getElementById('message').value;
+    async function sendEmbed() {
+      const username = document.getElementById('username').value.trim();
+      const avatarUrl = document.getElementById('avatarUrl').value.trim();
+      const title = document.getElementById('embedTitle').value.trim();
+      const description = document.getElementById('embedDescription').value.trim();
+      const colorHex = document.getElementById('embedColor').value;
+      const fileInput = document.getElementById('fileInput');
       const statusDiv = document.getElementById('status');
       const button = document.querySelector('button');
 
-      if (!messageInput.trim()) {
-        statusDiv.style.color = '#f23f42'; // Czerwony kolor Discorda
-        statusDiv.innerText = "Treść wiadomości nie może być pusta.";
+      if (!description && !title && fileInput.files.length === 0) {
+        statusDiv.style.color = '#f23f42';
+        statusDiv.innerText = "Podaj przynajmniej tytuł, opis lub plik!";
         return;
       }
 
-      statusDiv.style.color = '#f0b232'; // Żółty kolor Discorda
-      statusDiv.innerText = "Przesyłanie...";
+      statusDiv.style.color = '#f0b232';
+      statusDiv.innerText = "Wysyłanie...";
       button.disabled = true;
 
+      // Konwersja koloru HEX (#5865f2) na liczbę dziesiętną wymaganą przez API Discorda
+      const colorInt = parseInt(colorHex.replace('#', ''), 16);
+
+      // Budowanie obiektu Embed i danych Webhooka
       const payload = {
-        content: messageInput,
-        username: usernameInput.trim() !== "" ? usernameInput : "Panel Systemowy"
+        username: username !== "" ? username : undefined,
+        avatar_url: avatarUrl !== "" ? avatarUrl : undefined,
+        embeds: [
+          {
+            title: title !== "" ? title : undefined,
+            description: description !== "" ? description : undefined,
+            color: colorInt,
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "Wysłano z Panelu Operacyjnego"
+            }
+          }
+        ]
       };
+
+      // Użycie FormData pozwala wysłać jednocześnie JSON z Embedem oraz Plik
+      const formData = new FormData();
+      formData.append('payload_json', JSON.stringify(payload));
+
+      if (fileInput.files.length > 0) {
+        formData.append('files[0]', fileInput.files[0]);
+      }
 
       try {
         const response = await fetch(WEBHOOK_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
+          body: formData
         });
 
         if (response.ok || response.status === 204) {
-          statusDiv.style.color = '#23a559'; // Zielony kolor Discorda
-          statusDiv.innerText = "Wiadomość wysłana pomyślnie!";
-          document.getElementById('message').value = ''; // Czyści pole tekstowe po wysłaniu
+          statusDiv.style.color = '#23a559';
+          statusDiv.innerText = "Embed wysłany pomyślnie!";
+          // Czyszczenie pól formularza po wysłaniu
+          document.getElementById('embedTitle').value = '';
+          document.getElementById('embedDescription').value = '';
+          fileInput.value = '';
         } else {
           statusDiv.style.color = '#f23f42';
-          statusDiv.innerText = "Wystąpił błąd: " + response.status;
+          statusDiv.innerText = "Błąd API Discorda: " + response.status;
         }
       } catch (error) {
         statusDiv.style.color = '#f23f42';
